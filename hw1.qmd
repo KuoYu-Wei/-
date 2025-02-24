@@ -1,0 +1,61 @@
+---
+title: "HW1"
+subtitle: "Use Quarto to summarize the dataset Titanic"
+date: today
+author: Yu-Wei Kuo
+format:
+ pdf:
+    include-in-header:
+      - text: |
+         \usepackage{setspace,relsize}
+         \usepackage{geometry}
+         \geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+         \setlength{\parindent}{2em} % 設定自動縮排
+#mainfont: "Microsoft JhengHei UI"
+#mainfont: "Microsoft JhengHei"
+mainfont: "Microsoft JhengHei Bold"
+toc: true
+lang: zh-Tw
+documentclass: article
+pdf-engine: xelatex
+execute:
+  tidy: true
+  echo: true
+  warning: false
+  message: false
+---
+
+## 一、讀取資料
+
+```{r}
+#| results: asis
+# R Interface to Python
+data <- read.csv("C:/Users/ASUS/Downloads/titanic.csv")
+data$Survived <- factor(data$Survived, levels = c(0, 1), labels = c("No", "Yes"))
+library(reticulate)
+library(Hmisc)
+latex(describe(data), file="")
+```
+
+## 二、資料分析
+1. 整體分析：
+\newline 整筆資料有891個觀測值和12個變數，代表共有891人，12個變數中，有PassengerID, Survived, Pclass, Name, Sex, Age, SibSp, Parch, 
+    Ticket, Fare, Cabin, Embarked。
+2. Survived(存活率)：
+\newline 891人中有549人死亡342人生還，死亡率和存活率分別是61.6%和38.4%
+3. Pclass(艙等)：
+\newline 共分為1、2、3等艙，人數分別為216人、184人和491人，比例分別為24.2%、20.7%和55.1%，可知3等艙人數比例最多，1等艙人數比例最小。
+4. Sex(性別)：
+\newline 891人中共有女性314人男性577人，占總人數比分別為35.2%和54.8%。
+5. Age(年齡)：
+\newline 891人中有177人的年齡不詳，剩餘的714人其平均年齡為29.7歲，中位數是28歲，最大和最小年齡分別是80歲和0.42歲。
+6. SisSp(兄弟姊妹/配偶數)：
+\newline 在891人中，有608人沒有兄弟姊妹或配偶占比例68.2%，209人有1名兄弟姐妹或配偶占比例23.5%，28人有2名兄弟姐妹或配偶占比例3.1%，16人有3名兄弟姐妹或配偶占比例1.8%，18人有4名兄弟姐妹或配偶占比例2%，5人有1名兄弟姐妹或配偶占比例0.6%，7人有8名兄弟姐妹或配偶占比例0.8%。
+7. Parch(父母/子女數)：
+\newline 在891人中，有678人沒有父母或子女占比例76.1%，118人有1名父母或子女占比例13.2%，80人有2名父母或子女占比例9%，5人有3名父母或子女占比例0.6%，4人有4名父母或子女占比例0.4%，5人有5名父母或子女占比例0.6%，1人有6名父母或子女占比例0.1%。
+8. Ticket and Fare(票和票價)：
+\newline 共有681種票型，其票價平均是32英鎊，中位數是19.6英鎊，最高和最低票價分別為512.329英鎊和0英鎊。
+9. Cabin(房號)：
+\newline 891人中有687人房號不詳，而已知房號的204人分別住在147間不同的房間。
+10. Embark(登船港口)：
+\newline 有168人從C(Cherbourg)登船占比例18.9%，有77人從Q(Queenstown)登船占比例8.7%，有644人從S(Southampton)登船占比例72.4%，可知最多人從S(Southampton)登船，最少人從Q(Queenstown)登船。
