@@ -1,0 +1,196 @@
+---
+title: "HW2"
+subtitle: ""
+date: today
+author: Yu-Wei Kuo
+format:
+ pdf:
+    include-in-header:
+      - text: |
+         \usepackage{setspace,relsize}
+         \usepackage{geometry}
+         \geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+#mainfont: "Microsoft JhengHei UI"
+#mainfont: "Microsoft JhengHei"
+mainfont: "Microsoft JhengHei Bold"
+toc: true
+lang: zh-Tw
+documentclass: article
+pdf-engine: xelatex
+execute:
+  tidy: true
+  echo: true
+  warning: false
+  message: false
+---
+
+## 一、變數定義
+
+```{r}
+mushroom_data <- data.frame(
+  Variable = c('family', 'name', 'class', 'cap.diameter_min', 'cap.diameter_max', 'cap.shape', 
+               'Cap.surface', 'cap.color', 'does.bruise.or.bleed', 'gill.attachment', 
+               'gill.spacing', 'gill.color', 'stem.height_min', 'stem.height_max', 'stem.width_min', 
+               'stem.width_max', 'stem.root', 'stem.surface', 'stem.color', 'veil.type', 'veil.color', 
+               'has.ring', 'ring.type', 'Spore.print.color', 'habitat', 'season', 
+               'cap.diameter_mean', 'stem.height_mean', 'stem.width_mean'),
+  `Data Type` = c('character', 'character', 'factor', 'numerical', 'numerical', 'factor', 'factor', 'factor', 'factor', 'factor', 'factor',
+                  'factor', 'numerical', 'numerical', 'numerical', 'numerical', 'factor', 'facotr', 'factor', 'factor', 'factor', 'factor', 
+                  'factor', 'factor', 'factor', 'factor', 'numerical', 'numerical', 'numerical'),
+  Definition = c("Mushrooms' family", "Mushrooms' name", "Edible or not", "The minimum of mushrooms' cap diameter",
+                 "The maximum of mushrooms' cap diameter", "The shape of mushrooms' cap", "The surface of mushrooms' cap",
+                 "The color of mushrooms' cap", "Mushrooms' bruise or bleed or not", "How the gill attach", 
+                 "The space between the gill", "The color of the gill", "The minimum height of mushrooms' stem", 
+                 "The maximum height of mushrooms' stem", "The minimum width of mushrooms' stem", 
+                 "The maximum width of mushrooms' stem", "The root of mushrooms' stem", "The surface of mushrooms' stem",
+                 "The color of mushrooms' stem", "The type of veil is partial or universal", "The color of mushrooms' veil",
+                 "Mushrooms have ring or not", "What the type of mushrooms' ring is", "The color of mushrooms' spore print",
+                 "Mushrooms' habitat", "The season mushroom grows", "The mean of mushrooms' cap diameter", 
+                 "The mean height of mushrooms' stem", "The mean width of mushrooms' stem"),
+  Note = c("", "", "poisonous=p, edible=e", "", "", "bell=b, conical=c, convex=x, flat=f, sunken=s, spherical=p, others=o",
+           "fibrous=i, grooves=g, scaly=y, smooth=s, shiny=h, leathery=l, silky=k, sticky=t, wrinkled=w, fleshy=e", 
+           "brown=n, buff=b, gray=g, green=r, pink=p, purple=u, red=e, white=w, yellow=y, blue=l, orange=o, black=k", 
+           "bruise-or-bleeding=t, no=f", "adnate=a, adnexed=x, decurrent=d, free=e, sinuate=s, pores=p, none=f, unknown=x", 
+           "close=c, distant=d, none=f", "brown=n, buff=b, gray=g, green=r, pink=p, purple=u, red=e, white=w, yellow=y, blue=l, orange=o, black=k, none=f",
+           "", "", "", "", "bulbous=b, swollen=s, club=c, cup=u, equal=e, rhizomorphs=z, rooted=r", 
+           "fibrous=i, grooves=g, scaly=y, smooth=s, shiny=h, leathery=l, silky=k, sticky=t, wrinkled=w, fleshy=e, none=f", 
+           "brown=n, buff=b, gray=g, green=r, pink=p, purple=u, red=e, white=w, yellow=y, blue=l, orange=o, black=k, none=f", "partial=p, universal=u", "brown=n, buff=b, gray=g, green=r, pink=p, purple=u, red=e, white=w, yellow=y, blue=l, orange=o,  black=k, none=f", 
+           "ring=t, none=f", "cobwebby=c, evanescent=e, flaring=r, grooved=g, large=l, pendant=p, sheathing=s, zone=z, scaly=y, movable=m, none=f, unknown=z",
+           "brown=n, buff=b, gray=g, green=r, pink=p, purple=u, red=e, white=w, yellow=y, blue=l, orange=o, black=k", 
+           "grasses=g, leaves=l, meadows=m, paths=p, heaths=h, urban=u, waste=w, woods=d", "spring=s, summer=u, autumn=a, winter=w", 
+           "", "", ""),
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(mushroom_data)
+```
+
+## 二、讀取資料
+
+```{r}
+#| results: asis
+# R Interface to Python
+library(reticulate)
+library(Hmisc)
+library(tidyr)
+library(dplyr)
+
+df <- read.csv("C:/Users/ASUS/Downloads/mushroom/primary_data.csv", sep=";", stringsAsFactors=FALSE)
+
+process_numeric <- function(column) {
+  df <- df %>%
+    separate(column, into = c(paste0(column, "_min"), paste0(column, "_max")), sep = ",", fill = "right", extra = "drop") %>%
+    mutate(
+      across(starts_with(column), ~ as.numeric(gsub("\\[|\\]", "", .)))
+    ) %>%
+    mutate(
+      !!paste0(column, "_mean") := ifelse(is.na(!!sym(paste0(column, "_max"))), !!sym(paste0(column, "_min")), NA),
+      !!paste0(column, "_min") := ifelse(!is.na(!!sym(paste0(column, "_max"))), !!sym(paste0(column, "_min")), NA),
+      !!paste0(column, "_max") := ifelse(!is.na(!!sym(paste0(column, "_min"))), !!sym(paste0(column, "_max")), NA)
+    ) %>%
+  
+  return(df)
+}
+
+numeric_columns <- c("cap.diameter", "stem.height", "stem.width")
+for (col in numeric_columns) {
+  df <- process_numeric(col)
+}
+
+category_map <- list(
+  "cap-shape" = c(b="bell", c="conical", x="convex", f="flat", s="sunken", p="spherical", o="others"),
+  "cap-surface" = c(i="fibrous", g="grooves", y="scaly", s="smooth", h="shiny", l="leathery", k="silky", t="sticky", w="wrinkled", e="fleshy"),
+  "cap-color" = c(n="brown", b="buff", g="gray", r="green", p="pink", u="purple", e="red", w="white", y="yellow", l="blue", o="orange", k="black"),
+  "does-bruise-bleed" = c(t="bruises-or-bleeding", f="no"),
+  "gill-attachment" = c(a="adnate", x="adnexed", d="decurrent", e="free", s="sinuate", p="pores", f="none", "?"="unknown"),
+  "gill-spacing" = c(c="close", d="distant", f="none"),
+  "gill-color" = c(n="brown", b="buff", g="gray", r="green", p="pink", u="purple", e="red", w="white", y="yellow", l="blue", o="orange", k="black", f="none"),
+  "stem-root" = c(b="bulbous", s="swollen", c="club", u="cup", e="equal", z="rhizomorphs", r="rooted"),
+  "stem-surface" = c(i="fibrous", g="grooves", y="scaly", s="smooth", h="shiny", l="leathery", k="silky", t="sticky", w="wrinkled", e="fleshy", f="none"),
+  "stem-color" = c(n="brown", b="buff", g="gray", r="green", p="pink", u="purple", e="red", w="white", y="yellow", l="blue", o="orange", k="black", f="none"),
+  "veil-type" = c(p="partial", u="universal"),
+  "veil-color" = c(n="brown", b="buff", g="gray", r="green", p="pink", u="purple", e="red", w="white", y="yellow", l="blue", o="orange", k="black", f="none"),
+  "has-ring" = c(t="ring", f="none"),
+  "ring-type" = c(c="cobwebby", e="evanescent", r="flaring", g="grooved", l="large", p="pendant", s="sheathing", z="zone", y="scaly", m="movable", f="none", "?"="unknown"),
+  "spore-print-color" = c(n="brown", b="buff", g="gray", r="green", p="pink", u="purple", e="red", w="white", y="yellow", l="blue", o="orange", k="black"),
+  "habitat" = c(g="grasses", l="leaves", m="meadows", p="paths", h="heaths", u="urban", w="waste", d="woods"),
+  "season" = c(s="spring", u="summer", a="autumn", w="winter")
+)
+
+for (col in c("cap-shape", "habitat", "season")) {
+  df[[col]] <- unlist(lapply(df[[col]], function(x) {
+    if (is.na(x)) return(NA)
+    values <- unlist(strsplit(gsub("\\[|\\]", "", x), ","))
+    
+    if (col %in% c("habitat", "season")) {
+      return(paste(values, collapse=", "))
+    } else {
+      mapped_values <- category_map[[col]][values]
+      return(paste(mapped_values, collapse=", "))
+    }
+  }))
+}
+
+df <- df %>%
+  mutate(across(everything(), ~ gsub("\\[|\\]", "", .)))  # 移除 `[]`
+
+df <- df %>%
+  mutate(
+    across(c("cap.diameter_min", "cap.diameter_max", "stem.height_min", "stem.height_max",
+             "stem.width_min", "stem.width_max", "cap.diameter_mean", "stem.height_mean", "stem.width_mean"),
+           ~ as.numeric(.))
+  )
+latex(describe(df), file="")
+```
+
+
+## 三、資料簡述
+
+1. 整體分析：
+\newline 整筆資料有173個觀測值和29個變數，代表共有173種蘑菇，29個變數中，有family、name、class、cap.diameter_min、cap.diameter_max、cap.shape、
+Cap.surface、cap.color、does.bruise.or.bleed、gill.attachment、gill.spacing、gill.color、stem.height_min、stem.height_max、stem.width_min、
+stem.width_max、stem.root、stem.surface、stem.color、veil.type、veil.color、has.ring、ring.type、Spore.print.color、habitat、season、
+cap.diameter_mean、stem.height_mean、stem.width_mean。
+2. cap.diameter_min、cap.diameter_max和cap.diameter_mean：
+\newline cap.diameter_min、cap.diameter_max各有一缺失值，該缺失值僅提供mean故分別處理。
+3. stem.height_min、stem.height_max和stem.height_mean：
+\newline stem.height_min、stem.height_max各有三缺失值，該缺失值僅提供mean故分別處理。
+4. stem.width_min、stem.width_max和stem.width_mean：
+\newline stem.width_min、stem.width_max各有十一缺失值，該缺失值僅提供mean故分別處理。
+5. Cap.surface：
+\newline 有40項缺失值。
+6. gill.attachment：
+\newline 有71項缺失值。
+7. stem.root：
+\newline 有146項缺失值。
+8. stem.surface：
+\newline 有108項缺失值。
+9. veil.type：
+\newline 有164項缺失值。
+10. veil.color：
+\newline 有152項缺失值。
+11. ring.type：
+\newline 有7項缺失值。
+12. Spore.print.color：
+\newline 有155項缺失值。
+
+
+
+## 四、table one
+
+```{r}
+library(table1)
+
+table1(~family+name+cap.diameter_min+cap.diameter_max+cap.shape+Cap.surface+cap.color+does.bruise.or.bleed+gill.attachment+gill.spacing+gill.color
+       +stem.height_min+stem.height_max+stem.width_min+stem.width_max+stem.root+stem.surface+stem.color+veil.type+veil.color+has.ring
+       +ring.type+Spore.print.color+habitat+season+cap.diameter_mean+stem.height_mean+stem.width_mean|class, data = df
+)
+```
+
+
+
+
+
+
+
+
